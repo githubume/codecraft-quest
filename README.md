@@ -17,13 +17,19 @@
 
 ```bash
 npm install
-npm run dev
+npm start
 ```
 
-打开浏览器访问：
+浏览器会自动打开。也可以手动访问：
 
 ```text
 http://127.0.0.1:5173/
+```
+
+macOS 也可以直接双击：
+
+```text
+scripts/start-game.command
 ```
 
 ## 构建发布版本
@@ -67,10 +73,10 @@ git config --global user.email "你的邮箱"
 git clone https://github.com/你的用户名/codecraft-quest.git
 cd codecraft-quest
 npm install
-npm run dev
+npm start
 ```
 
-然后访问：
+浏览器会自动打开。也可以手动访问：
 
 ```text
 http://127.0.0.1:5173/
