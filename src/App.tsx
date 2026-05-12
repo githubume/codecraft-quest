@@ -592,19 +592,18 @@ function EntitySprite({ entity }: { entity: GameState["entities"][number] }) {
 
 function Robot({ direction, mood }: { direction: GameState["direction"]; mood: "ready" | "happy" | "sad" }) {
   return (
-    <div className={`robot robot-${direction} robot-${mood}`} aria-label={`robot ${mood}`}>
-      <div className="robot-antenna" />
-      <div className="robot-head">
-        <span className="robot-eye" />
-        <span className="robot-eye" />
-        <span className="robot-mouth" />
-        {mood === "sad" && <span className="robot-tear" />}
+    <div className={`robot player player-${direction} player-${mood}`} aria-label={`player ${mood} facing ${direction}`}>
+      <div className="player-arrow" />
+      <div className="player-head">
+        <span className="player-eye" />
+        <span className="player-eye" />
+        <span className="player-mouth" />
+        {mood === "sad" && <span className="player-tear" />}
       </div>
-      <div className="robot-body">
-        <span />
-        <span />
+      <div className="player-body">
+        <span className="player-pack" />
       </div>
-      <div className="robot-feet">
+      <div className="player-arms">
         <span />
         <span />
       </div>

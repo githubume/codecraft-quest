@@ -419,7 +419,7 @@ p {
   color: rgba(255, 253, 245, 0.68);
 }
 
-.tile-stack .robot + .entity {
+.tile-stack .player + .entity {
   position: absolute;
   right: 2px;
   bottom: 2px;
@@ -428,157 +428,163 @@ p {
   font-size: 8px;
 }
 
-.robot {
+.player {
+  --player-rotation: 90deg;
   position: relative;
-  width: 68%;
-  height: 78%;
+  width: 70%;
+  aspect-ratio: 1 / 1;
   display: grid;
-  grid-template-rows: 8px 1fr 0.78fr 8px;
-  justify-items: center;
-  align-items: center;
-  transform-origin: center;
+  place-items: center;
 }
 
-.robot-up {
-  transform: rotate(-90deg);
+.player-up {
+  --player-rotation: 0deg;
 }
 
-.robot-right {
-  transform: rotate(0deg);
+.player-right {
+  --player-rotation: 90deg;
 }
 
-.robot-down {
-  transform: rotate(90deg);
+.player-down {
+  --player-rotation: 180deg;
 }
 
-.robot-left {
-  transform: rotate(180deg);
+.player-left {
+  --player-rotation: 270deg;
 }
 
-.robot-antenna {
-  width: 4px;
-  height: 10px;
-  border-radius: 4px;
-  background: #17211b;
+.player-arrow {
+  position: absolute;
+  top: -7px;
+  left: calc(50% - 9px);
+  width: 18px;
+  height: 18px;
+  transform: rotate(var(--player-rotation));
+  transform-origin: 50% calc(50% + 22px);
+  z-index: 3;
 }
 
-.robot-antenna::before {
+.player-arrow::before {
   content: "";
   position: absolute;
-  top: -1px;
-  left: calc(50% - 5px);
-  width: 10px;
-  height: 10px;
+  inset: 0;
+  clip-path: polygon(50% 0, 100% 100%, 50% 72%, 0 100%);
   border: 2px solid #17211b;
-  border-radius: 50%;
   background: #f6c443;
 }
 
-.robot-head,
-.robot-body {
+.player-head,
+.player-body,
+.player-arms span {
   position: relative;
   border: 2px solid #17211b;
-  background: #fffdf5;
 }
 
-.robot-head {
-  width: 88%;
-  height: 100%;
+.player-head {
+  position: absolute;
+  top: 9%;
+  width: 42%;
+  aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 0.75fr;
-  column-gap: 12%;
+  grid-template-rows: 1fr 0.65fr;
+  column-gap: 10%;
   justify-items: center;
   align-items: center;
-  border-radius: 7px;
-  padding: 10% 14% 8%;
-  box-shadow: inset 0 -5px 0 rgba(212, 231, 188, 0.9);
+  border-radius: 50%;
+  padding: 15% 17% 10%;
+  background: #fffdf5;
+  z-index: 2;
 }
 
-.robot-eye {
-  width: 10px;
-  height: 10px;
+.player-eye {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #17211b;
 }
 
-.robot-mouth {
+.player-mouth {
   grid-column: 1 / 3;
-  width: 26px;
-  height: 10px;
-  border-bottom: 3px solid #17211b;
+  width: 17px;
+  height: 7px;
+  border-bottom: 2px solid #17211b;
   border-radius: 0 0 20px 20px;
 }
 
-.robot-body {
-  width: 68%;
-  height: 88%;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  align-items: center;
-  border-radius: 6px;
+.player-body {
+  position: absolute;
+  bottom: 9%;
+  width: 58%;
+  height: 58%;
+  display: grid;
+  place-items: center;
+  border-radius: 40% 40% 12px 12px;
   background: #87c6ff;
+  z-index: 1;
 }
 
-.robot-body span {
-  width: 8px;
-  height: 8px;
+.player-pack {
+  width: 34%;
+  height: 26%;
   border: 2px solid #17211b;
-  border-radius: 50%;
+  border-radius: 6px;
   background: #f6c443;
 }
 
-.robot-feet {
+.player-arms {
+  position: absolute;
+  top: 48%;
+  width: 78%;
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
+  z-index: 0;
 }
 
-.robot-feet span {
-  width: 12px;
-  height: 7px;
-  border: 2px solid #17211b;
-  border-radius: 5px 5px 3px 3px;
-  background: #59645d;
+.player-arms span {
+  width: 18%;
+  height: 24px;
+  border-radius: 12px;
+  background: #fffdf5;
 }
 
-.robot-happy .robot-head {
+.player-happy .player-head {
   background: #fff9d8;
 }
 
-.robot-happy .robot-mouth {
-  width: 30px;
-  height: 14px;
-  border-bottom-width: 4px;
+.player-happy .player-mouth {
+  width: 19px;
+  height: 9px;
+  border-bottom-width: 3px;
 }
 
-.robot-happy .robot-eye {
-  height: 8px;
+.player-happy .player-eye {
+  height: 5px;
   border-radius: 8px;
 }
 
-.robot-sad .robot-head {
+.player-sad .player-head {
   background: #e7f1ff;
 }
 
-.robot-sad .robot-mouth {
-  height: 12px;
-  border-top: 3px solid #17211b;
+.player-sad .player-mouth {
+  height: 8px;
+  border-top: 2px solid #17211b;
   border-bottom: 0;
   border-radius: 20px 20px 0 0;
 }
 
-.robot-sad .robot-eye {
-  width: 9px;
-  height: 9px;
+.player-sad .player-eye {
+  width: 6px;
+  height: 6px;
 }
 
-.robot-tear {
+.player-tear {
   position: absolute;
-  right: 18%;
+  right: 16%;
   top: 46%;
-  width: 7px;
-  height: 12px;
+  width: 6px;
+  height: 10px;
   border: 1px solid #17211b;
   border-radius: 8px 8px 8px 2px;
   background: #87c6ff;
