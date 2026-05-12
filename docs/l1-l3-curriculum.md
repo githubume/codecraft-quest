@@ -1,484 +1,315 @@
-# CodeCraft Quest L1-L3 后续关卡设计
+# CodeCraft Quest 现有 10 关之后的 L1-L3 课程设计
 
-## 设计目标
+## 先对齐现状
 
-L1-L3 不再只做“机器人走到终点”，而是从 Scratch L1-L3 素材的教学思路中提炼出一条更适合 CodeCraft Quest 的路线：
+当前游戏已经有 10 关，不再从零开始设计。
 
-```text
-会控制 -> 会判断 -> 会重复 -> 会收集 -> 会发射 -> 会制造敌人 -> 会做小游戏项目
-```
+| 当前关卡 | 已覆盖能力 | 作用 |
+| --- | --- | --- |
+| 1 小机器人出发 | 顺序执行 | 会按步骤控制角色 |
+| 2 转弯找到宝箱 | 方向控制 | 理解 turn 和 move 的区别 |
+| 3 重复采矿 | 循环 | 初步使用 repeat |
+| 4 怪物前方转向 | 条件判断 | 理解 if enemy ahead |
+| 5 金币积分 | 变量/分数 | 理解 score |
+| 6 钥匙开门 | 状态/门禁 | 理解 key 和 door |
+| 7 陷阱小路 | 生命值 | 理解 health |
+| 8 自动避墙迷宫 | 传感器判断 | 理解 if wall ahead |
+| 9 金币与门的选择 | 多目标规划 | 同时处理 score、key、door |
+| 10 综合挑战：基地救援 | 综合调试 | 把条件、状态、路径合在一起 |
 
-每一关同时承担三件事：
-
-1. 学一个明确的编程概念。
-2. 在游戏过程中反复看见 3-5 个英文技术词。
-3. 产出一个小作品或一个作品部件。
-
-## 总体结构
-
-| 等级 | 主题 | 关卡数 | 核心能力 | 项目结果 |
-| --- | --- | ---: | --- | --- |
-| L1 | 小机器人入门营 | 12 | 顺序、方向、循环、坐标、条件、克隆、广播 | 做出一个“收集与发射”小游戏雏形 |
-| L2 | 游戏规则训练营 | 12 | 生命值、得分、界面、敌人、炮弹、背景、胜负 | 做出一个完整 2D 防守小游戏 |
-| L3 | 项目挑战岛 | 12 | 多场景、多任务、道具、NPC、关卡目标、复盘表达 | 做出一个可展示的冒险小游戏 |
-
-## 共同关卡模板
-
-每关都按同一结构保存，后续可以直接转成 `levels.ts` 或 JSON。
+所以后续 L1-L3 的定位不是“入门 1-3 级”，而是：
 
 ```text
-关卡名
-- 故事任务
-- 编程概念
-- 可用积木
-- 新增机制
-- 英语词
-- 通关目标
-- 项目产出
-- AI 教练提示
-- 复盘问题
+现有 1-10 关 = 编程闯关基础
+后续 L1 = 做出第一个小游戏机制
+后续 L2 = 做出完整游戏规则
+后续 L3 = 做出可展示项目
 ```
 
-## L1：小机器人入门营
+## 后续课程总结构
 
-目标：让孩子理解程序的基本控制方式，并做出第一个“能动、能收集、能发射、能有敌人”的小游戏雏形。
+| 阶段 | 对应关卡 | 主题 | 核心目标 | 最终产出 |
+| --- | --- | --- | --- | --- |
+| L1 | 11-22 | 从闯关到小游戏机制 | 下落、碰撞、发射、克隆、广播 | 一个“收集 + 射击 + 敌人”的小游戏雏形 |
+| L2 | 23-34 | 游戏规则系统 | 生命、得分、开始/结束、波次、技能 | 一个完整防守小游戏 |
+| L3 | 35-46 | 项目化冒险 | 道具、NPC、随机、解谜、Boss、多结局 | 一个可向家长展示的冒险小游戏 |
 
-### L1-1：Wake Up Robot
+## 设计原则
+
+1. 不重复现有 1-10 关已经掌握的基础，而是把它们用在项目里。
+2. 每一关新增一个机制，最终拼成完整项目。
+3. 英语词必须绑定游戏动作，不做孤立背单词。
+4. 每个阶段最后一关必须是项目整合和讲解。
+5. AI 教练只提示观察方向，不代写答案。
+
+## L1：小游戏机制训练营，关卡 11-22
+
+目标：孩子已经会控制机器人走地图，L1 要让他开始做真正小游戏常见机制：下落物、碰撞、得分、敌人、子弹、克隆、广播。
+
+### 11：Falling Energy
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 小机器人醒来，要走到能量宝箱。 |
-| 编程概念 | 顺序执行 |
-| 可用积木 | move |
-| 新增机制 | 程序从上到下执行 |
-| 英语词 | start 开始, move 移动, goal 目标 |
-| 通关目标 | 走到宝箱 |
-| 项目产出 | 一个可运行的最小程序 |
+| 中文名 | 下落的能量球 |
+| 编程点 | 坐标变化、自动下落 |
+| 复用旧知识 | move、score |
+| 新机制 | energy 从上方向下移动 |
+| 可用积木 | spawn energy, change y, if bottom, reset |
+| 英语词 | energy 能量, fall 下落, bottom 底部, reset 重置 |
+| 通关目标 | 让 5 个 energy 从上方落下并重置 |
+| 项目产出 | 下落物系统 |
 
 AI 教练提示：
 
 ```text
-数一数机器人和 treasure 中间有几个空格。
+energy 每次到 bottom 后，应该回到哪里重新开始？
 ```
 
-复盘问题：
-
-```text
-你用了几个 move？
-为什么程序会按顺序运行？
-```
-
-### L1-2：Turn At The Corner
+### 12：Catch Energy
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 宝箱藏在拐角后面，机器人要先转向。 |
-| 编程概念 | 方向与朝向 |
-| 可用积木 | move, turn left, turn right |
-| 新增机制 | 机器人有 direction |
-| 英语词 | turn 转向, left 左, right 右 |
-| 通关目标 | 绕过墙到达宝箱 |
-| 项目产出 | 一个带转弯路线的程序 |
+| 中文名 | 接住能量球 |
+| 编程点 | 碰撞检测 |
+| 新机制 | robot 接住 energy |
+| 可用积木 | if touching, collect, change score |
+| 英语词 | catch 接住, touch 碰到, collect 收集, score 分数 |
+| 通关目标 | 接住 5 个 energy，score 达到 5 |
+| 项目产出 | 接物品小游戏核心 |
 
-### L1-3：Repeat Steps
-
-| 项目 | 内容 |
-| --- | --- |
-| 故事任务 | 矿洞里有一排能量石，机器人要连续采集。 |
-| 编程概念 | 循环 |
-| 可用积木 | move, collect, repeat |
-| 新增机制 | repeat 可以压缩重复动作 |
-| 英语词 | repeat 重复, collect 收集, again 再一次 |
-| 通关目标 | 收集 5 个矿石 |
-| 项目产出 | 一个用了循环的采集程序 |
-
-### L1-4：Falling Suns
+### 13：Miss And Retry
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 天上不断落下阳光，机器人要接住它们。 |
-| 编程概念 | 坐标与下落 |
-| 可用积木 | set x, set y, change y, repeat, if touching |
-| 新增机制 | 物体从上往下移动 |
-| 英语词 | x position 横坐标, y position 纵坐标, fall 下落, touch 碰到 |
-| 通关目标 | 接住 5 个阳光 |
-| 项目产出 | “接物品”小游戏核心机制 |
+| 中文名 | 漏接要重来 |
+| 编程点 | 条件分支、失败反馈 |
+| 新机制 | energy 掉到底部没有被接住会 miss +1 |
+| 可用积木 | if bottom, change miss, reset |
+| 英语词 | miss 漏掉, retry 重试, fail 失败 |
+| 通关目标 | score 达到 5 且 miss 少于 3 |
+| 项目产出 | 失败反馈系统 |
 
-设计说明：这一关对应 Scratch L1 的“不断下落的阳光”，但改成网格或轻量坐标模式，孩子开始理解位置不是只靠格子，也可以用 x/y 表示。
-
-### L1-5：Collect Effect
+### 14：Enemy Walk
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 接到阳光后，分数增加并播放特效。 |
-| 编程概念 | 条件判断 + 变量 |
-| 可用积木 | if touching, change score, hide, show |
-| 新增机制 | score 变量 |
-| 英语词 | if 如果, score 分数, hide 隐藏, show 显示 |
-| 通关目标 | score 达到 10 |
-| 项目产出 | 有得分反馈的收集系统 |
+| 中文名 | 敌人巡逻 |
+| 编程点 | 自动移动、边界判断 |
+| 新机制 | enemy 左右巡逻 |
+| 可用积木 | enemy move, if edge, turn around |
+| 英语词 | enemy 敌人, patrol 巡逻, edge 边缘 |
+| 通关目标 | enemy 能自动巡逻 10 秒 |
+| 项目产出 | 敌人行为系统 |
 
-### L1-6：Zombie Walk
-
-| 项目 | 内容 |
-| --- | --- |
-| 故事任务 | 一只僵尸从右向左走来。 |
-| 编程概念 | 角色移动与边界 |
-| 可用积木 | move, change x, if edge, reset position |
-| 新增机制 | 敌人自动移动 |
-| 英语词 | enemy 敌人, walk 行走, edge 边缘, reset 重置 |
-| 通关目标 | 观察僵尸走到边缘后重新出现 |
-| 项目产出 | 第一个 enemy 行为 |
-
-### L1-7：Walking Animation
+### 15：Hit Danger
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 僵尸走路时要切换动作，看起来更真实。 |
-| 编程概念 | 外观切换 |
-| 可用积木 | next costume, wait, repeat |
-| 新增机制 | 帧动画 |
-| 英语词 | costume 造型, animation 动画, wait 等待 |
-| 通关目标 | 僵尸移动时有走路动画 |
-| 项目产出 | 一个会动的敌人角色 |
+| 中文名 | 碰到敌人扣血 |
+| 编程点 | 碰撞 + health 变量 |
+| 复用旧知识 | health |
+| 新机制 | robot touching enemy 后 health -1 |
+| 可用积木 | if touching enemy, change health |
+| 英语词 | hit 撞击, damage 伤害, health 生命 |
+| 通关目标 | 躲开 enemy，坚持 20 秒 |
+| 项目产出 | 伤害系统 |
 
-### L1-8：Dodge The Bullet
-
-| 项目 | 内容 |
-| --- | --- |
-| 故事任务 | 僵尸遇到子弹要躲开。 |
-| 编程概念 | 碰撞检测 |
-| 可用积木 | if touching bullet, turn, move |
-| 新增机制 | 子弹对象 |
-| 英语词 | bullet 子弹, dodge 躲避, hit 击中 |
-| 通关目标 | 僵尸成功躲过 3 次子弹 |
-| 项目产出 | 第一个碰撞判断玩法 |
-
-### L1-9：Clone Army
+### 16：Shoot Bullet
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 僵尸不止一只，会不断出现。 |
-| 编程概念 | 克隆 |
+| 中文名 | 发射子弹 |
+| 编程点 | 角色生成、方向运动 |
+| 新机制 | bullet 从 robot 位置发射 |
+| 可用积木 | shoot, spawn bullet, bullet move |
+| 英语词 | shoot 发射, bullet 子弹, direction 方向 |
+| 通关目标 | 子弹能向前飞出并消失 |
+| 项目产出 | 射击系统 |
+
+### 17：Bullet Hits Enemy
+
+| 项目 | 内容 |
+| --- | --- |
+| 中文名 | 子弹击中敌人 |
+| 编程点 | 双对象碰撞 |
+| 新机制 | bullet touching enemy 后 enemy 消失、score +1 |
+| 可用积木 | if bullet touching enemy, delete enemy, score +1 |
+| 英语词 | hit 击中, delete 删除, destroy 消灭 |
+| 通关目标 | 击中 3 个 enemy |
+| 项目产出 | 战斗计分系统 |
+
+### 18：Clone Enemies
+
+| 项目 | 内容 |
+| --- | --- |
+| 中文名 | 生成敌人小队 |
+| 编程点 | 克隆/批量生成 |
+| 新机制 | 每隔一段时间 spawn enemy |
 | 可用积木 | create clone, when clone starts, delete clone |
-| 新增机制 | 同类敌人批量生成 |
-| 英语词 | clone 克隆, spawn 生成, delete 删除 |
-| 通关目标 | 生成 5 只敌人并让它们移动 |
+| 英语词 | clone 克隆, spawn 生成, wave 波次 |
+| 通关目标 | 生成并消灭 5 个 enemy clone |
 | 项目产出 | 敌人生成器 |
 
-### L1-10：Ice Shooter
+### 19：Broadcast Attack
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 冰豆射手加入战斗，可以发射冰豆。 |
-| 编程概念 | 角色协作 |
-| 可用积木 | broadcast, shoot, create clone |
-| 新增机制 | 玩家角色发射子弹 |
-| 英语词 | shoot 发射, bullet 子弹, freeze 冰冻 |
-| 通关目标 | 发射子弹击中敌人 |
-| 项目产出 | 射击机制 |
+| 中文名 | 广播攻击命令 |
+| 编程点 | 事件通信 |
+| 新机制 | 点击按钮 broadcast shoot，炮台 receive 后发射 |
+| 可用积木 | broadcast, receive, shoot |
+| 英语词 | broadcast 广播, receive 接收, message 消息 |
+| 通关目标 | 用广播触发 3 次攻击 |
+| 项目产出 | 角色通信系统 |
 
-### L1-11：Message Power
-
-| 项目 | 内容 |
-| --- | --- |
-| 故事任务 | 点击按钮后，炮台收到消息并发射。 |
-| 编程概念 | 广播 |
-| 可用积木 | broadcast, when receive, shoot |
-| 新增机制 | 消息驱动 |
-| 英语词 | message 消息, broadcast 广播, receive 接收 |
-| 通关目标 | 通过广播触发炮弹 |
-| 项目产出 | 事件通信机制 |
-
-### L1-12：Mini Project - Guard The Garden
+### 20：Power Freeze
 
 | 项目 | 内容 |
 | --- | --- |
-| 故事任务 | 僵尸来袭，机器人要收集阳光、发射子弹、保护花园。 |
-| 编程概念 | L1 综合 |
-| 可用积木 | L1 全部基础积木 |
-| 新增机制 | 简单胜负 |
-| 英语词 | game 游戏, win 胜利, lose 失败, protect 保护 |
-| 通关目标 | 在 60 秒内守住花园 |
-| 项目产出 | 第一个可玩的小游戏 |
+| 中文名 | 冰冻技能 |
+| 编程点 | 状态变量、计时 |
+| 新机制 | enemy frozen 后暂停移动 3 秒 |
+| 可用积木 | set frozen, wait, resume |
+| 英语词 | freeze 冰冻, pause 暂停, resume 继续 |
+| 通关目标 | 用 freeze 技能阻止 enemy 靠近 |
+| 项目产出 | 技能状态系统 |
+
+### 21：Level Builder
+
+| 项目 | 内容 |
+| --- | --- |
+| 中文名 | 设计自己的小地图 |
+| 编程点 | 规则设计 |
+| 新机制 | 选择 wall、coin、enemy、goal 放入地图 |
+| 可用积木 | place wall, place coin, place enemy, test level |
+| 英语词 | build 建造, place 放置, test 测试 |
+| 通关目标 | 自己设计一张能通关的地图 |
+| 项目产出 | 第一张自制地图 |
+
+### 22：L1 Project - Energy Defender
+
+| 项目 | 内容 |
+| --- | --- |
+| 中文名 | 能量防守小游戏 |
+| 编程点 | L1 综合 |
+| 新机制 | 下落物、得分、敌人、子弹、克隆、广播合并 |
+| 可用积木 | L1 全部积木 |
+| 英语词 | game 游戏, rule 规则, win 胜利, explain 解释 |
+| 通关目标 | 做出一个能玩 60 秒的小游戏 |
+| 项目产出 | Energy Defender v1 |
 
 复盘问题：
 
 ```text
-你的游戏里有哪些角色？
-哪个角色负责 collect？哪个角色负责 shoot？
-你用了 repeat、if、clone、broadcast 中的哪几个？
+你的游戏里有哪些 object？
+哪个 object 负责 fall？哪个 object 负责 shoot？
+你用了 clone 和 broadcast 做什么？
 ```
 
-## L2：游戏规则训练营
+## L2：完整游戏规则训练营，关卡 23-34
 
-目标：让孩子理解“游戏不是角色堆在一起，而是一套规则系统”。L2 重点训练生命值、得分、界面、敌人波次、胜负条件。
+目标：L1 做出了机制，L2 要把机制组合成真正游戏：开始界面、结束界面、生命值、波次、难度、奖励和大招。
 
-### L2-1：Cherry Bomb
+| 关卡 | 名称 | 编程点 | 英语词 | 项目产出 |
+| ---: | --- | --- | --- | --- |
+| 23 | Start Screen | 场景/状态切换 | start screen, button, click | 开始界面 |
+| 24 | Game Over | 失败条件 | game over, lose, restart | 结束界面 |
+| 25 | Health UI | 状态可视化 | heart, health, display | 生命值 UI |
+| 26 | Score Board | 计分板 | score, board, record | 得分面板 |
+| 27 | Enemy Wave | 波次生成 | wave, level, speed | 敌人波次 |
+| 28 | Difficulty Up | 难度递增 | difficulty, faster, harder | 速度递增 |
+| 29 | Coin Shop | 资源消耗 | coin, cost, buy | 商店/购买 |
+| 30 | Upgrade Shooter | 升级系统 | upgrade, power, cooldown | 炮台升级 |
+| 31 | Full Screen Skill | 全局技能 | clear, all, power | 清屏技能 |
+| 32 | Sound Feedback | 音效反馈 | sound, effect, feedback | 音效系统 |
+| 33 | Rule Test | 测试规则 | test, bug, fix | 调试清单 |
+| 34 | L2 Project - Defender 2.0 | L2 综合 | publish, version, improve | 完整防守小游戏 |
 
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 范围碰撞 |
-| 新增机制 | 爆炸范围 |
-| 英语词 | bomb 炸弹, explode 爆炸, range 范围 |
-| 项目产出 | 一次性大招道具 |
-
-### L2-2：Destroy Enemies
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 克隆删除 + 得分 |
-| 新增机制 | 击中敌人后 delete clone |
-| 英语词 | destroy 消灭, score 分数, clone 克隆 |
-| 项目产出 | 击杀计分系统 |
-
-### L2-3：Health System
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 生命值变量 |
-| 新增机制 | enemy 逃走会 health -1 |
-| 英语词 | health 生命, damage 伤害, miss 漏掉 |
-| 项目产出 | 生命值系统 |
-
-### L2-4：Heart UI
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 状态可视化 |
-| 新增机制 | 用图标显示 health |
-| 英语词 | heart 红心, status 状态, display 显示 |
-| 项目产出 | 游戏 UI 面板 |
-
-### L2-5：Start Screen
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 场景切换 |
-| 新增机制 | 开始界面 |
-| 英语词 | start screen 开始界面, button 按钮, click 点击 |
-| 项目产出 | 游戏开始页 |
-
-### L2-6：Game Over Screen
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 失败条件 |
-| 新增机制 | health 为 0 进入结束界面 |
-| 英语词 | game over 游戏结束, lose 失败, restart 重新开始 |
-| 项目产出 | 游戏结束页 |
-
-### L2-7：Recruit Heroes
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 选择与条件 |
-| 新增机制 | 用金币招募角色 |
-| 英语词 | recruit 招募, cost 花费, choose 选择 |
-| 项目产出 | 角色选择系统 |
-
-### L2-8：Arrow Rain
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 多克隆弹幕 |
-| 新增机制 | 同时发射多支箭 |
-| 英语词 | arrow 箭, rain 大量落下, wave 波次 |
-| 项目产出 | 弹幕攻击 |
-
-### L2-9：Space Fighter
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 键盘控制 |
-| 新增机制 | WASD 或方向键移动 |
-| 英语词 | key 键, control 控制, spaceship 飞船 |
-| 项目产出 | 飞船操控系统 |
-
-### L2-10：Infinite Background
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 循环背景 |
-| 新增机制 | 背景滚动 |
-| 英语词 | background 背景, scroll 滚动, loop 循环 |
-| 项目产出 | 无限移动背景 |
-
-### L2-11：Full Screen Bomb
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 全局事件 |
-| 新增机制 | 清屏技能 |
-| 英语词 | power 技能, clear 清除, all 全部 |
-| 项目产出 | 大招按钮 |
-
-### L2-12：Mini Project - Defender 2.0
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | L2 综合 |
-| 新增机制 | 开始页、生命值、得分、敌人波次、结束页 |
-| 英语词 | rule 规则, level 关卡, upgrade 升级 |
-| 项目产出 | 一个完整防守小游戏 |
-
-## L3：项目挑战岛
-
-目标：让孩子完成从“做机制”到“做项目”的跨越。L3 关卡要有故事线、多个目标、道具、NPC、场景和最终作品展示。
-
-### L3-1：Training Exam
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 任务拆解 |
-| 新增机制 | 多个小目标 |
-| 英语词 | task 任务, step 步骤, finish 完成 |
-| 项目产出 | 多目标任务系统 |
-
-### L3-2：Find Equipment
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 道具状态 |
-| 新增机制 | backpack 背包 |
-| 英语词 | item 物品, backpack 背包, equip 装备 |
-| 项目产出 | 道具收集系统 |
-
-### L3-3：Supply Drop
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 随机生成 |
-| 新增机制 | 空投随机落点 |
-| 英语词 | random 随机, supply 补给, drop 掉落 |
-| 项目产出 | 随机补给系统 |
-
-### L3-4：Rescue NPC
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | NPC 对话与条件 |
-| 新增机制 | rescue 任务 |
-| 英语词 | rescue 营救, talk 对话, NPC 角色 |
-| 项目产出 | NPC 任务系统 |
-
-### L3-5：Bee Swarm
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 群体敌人 |
-| 新增机制 | 多个敌人按规律移动 |
-| 英语词 | swarm 群体, pattern 规律, avoid 避开 |
-| 项目产出 | 敌人群体行为 |
-
-### L3-6：Secret Water
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 解谜条件 |
-| 新增机制 | 按正确顺序触发机关 |
-| 英语词 | secret 秘密, order 顺序, puzzle 谜题 |
-| 项目产出 | 顺序解谜机关 |
-
-### L3-7：Flashlight
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 可见范围 |
-| 新增机制 | 手电筒照亮区域 |
-| 英语词 | light 光, dark 黑暗, visible 可见 |
-| 项目产出 | 黑暗探索机制 |
-
-### L3-8：Escape Route
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 路线切换 |
-| 新增机制 | 多条路线和风险选择 |
-| 英语词 | route 路线, switch 切换, risk 风险 |
-| 项目产出 | 路线选择系统 |
-
-### L3-9：Boss Rage
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 状态机 |
-| 新增机制 | Boss 在不同 health 阶段改变行为 |
-| 英语词 | boss 首领, phase 阶段, rage 狂暴 |
-| 项目产出 | Boss 阶段系统 |
-
-### L3-10：Emotion Choice
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 多结局 |
-| 新增机制 | 选择不同对话导致不同结果 |
-| 英语词 | choice 选择, result 结果, ending 结局 |
-| 项目产出 | 分支剧情 |
-
-### L3-11：Project Polish
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 调试与优化 |
-| 新增机制 | 减少重复积木、修复 bug、补充说明 |
-| 英语词 | debug 调试, fix 修复, improve 改进 |
-| 项目产出 | 可展示版本 |
-
-### L3-12：Show Your Game
-
-| 项目 | 内容 |
-| --- | --- |
-| 编程概念 | 表达复盘 |
-| 新增机制 | 作品发布页 |
-| 英语词 | present 展示, explain 解释, project 项目 |
-| 项目产出 | 一段作品讲解和项目卡片 |
-
-## L1-L3 积木开放顺序
-
-| 阶段 | 新开放积木 |
-| --- | --- |
-| L1-1 到 L1-3 | move, turn, collect, repeat |
-| L1-4 到 L1-5 | set x/y, change x/y, if touching, score |
-| L1-6 到 L1-8 | enemy move, edge, costume, bullet, hit |
-| L1-9 到 L1-12 | clone, delete clone, broadcast, receive |
-| L2 | health, damage, start screen, game over, wave, power |
-| L3 | backpack, NPC talk, random drop, puzzle order, boss phase, ending |
-
-## 英语设计规则
-
-1. 英文永远比中文更大，中文只做弱提示。
-2. 每关只新增 3-5 个英文词。
-3. 英文要同时出现在积木、地图对象、任务目标、通关复盘中。
-4. 不做孤立背单词，所有词都必须绑定游戏动作。
-
-示例：
+L2 项目验收标准：
 
 ```text
-collect
-- 积木：collect
-- 地图：collect sun
-- 任务：Collect five suns.
-- 复盘：When did you use collect?
+有开始界面
+有游戏过程
+有生命值和得分
+有失败和胜利
+有至少 2 种敌人或 2 种技能
+孩子能讲清楚 3 条规则
 ```
 
-## AI 教练规则
+## L3：项目化冒险训练营，关卡 35-46
 
-L1-L3 的 AI 仍然不直接给答案，只做三类帮助：
+目标：L3 从“防守小游戏”转为“冒险项目”，训练孩子做任务系统、道具系统、NPC、随机、解谜、Boss、多结局和作品发布。
 
-| 类型 | 示例 |
-| --- | --- |
-| 观察 | 你有没有发现 enemy 每次都从右边出现？ |
-| 提问 | 哪个动作重复了？可以用 repeat 吗？ |
-| 定位错误 | 你的 score 没变，是不是只碰到了 coin，但没有 collect？ |
+| 关卡 | 名称 | 编程点 | 英语词 | 项目产出 |
+| ---: | --- | --- | --- | --- |
+| 35 | Backpack Items | 道具状态 | item, backpack, equip | 背包系统 |
+| 36 | Random Drop | 随机生成 | random, drop, chance | 随机补给 |
+| 37 | NPC Talk | 对话触发 | talk, ask, answer | NPC 对话 |
+| 38 | Rescue Mission | 多目标任务 | rescue, task, finish | 营救任务 |
+| 39 | Puzzle Order | 顺序解谜 | order, puzzle, secret | 机关谜题 |
+| 40 | Light In Dark | 可见范围 | light, dark, visible | 黑暗探索 |
+| 41 | Route Choice | 路线选择 | route, risk, choose | 多路线地图 |
+| 42 | Boss Phase | 状态机 | boss, phase, rage | Boss 阶段 |
+| 43 | Multiple Endings | 分支结果 | choice, result, ending | 多结局 |
+| 44 | Project Polish | 优化调试 | debug, fix, improve | 可展示版本 |
+| 45 | English Explain | 英语表达 | present, explain, project | 英语讲解卡 |
+| 46 | L3 Project - My Adventure | L3 综合 | creator, publish, review | 冒险项目发布 |
 
-## 与当前 10 关的关系
+L3 项目验收标准：
 
-当前 10 关可以保留为“机器人基础闯关 Demo”，但后续正式课程建议改为：
+```text
+有一个明确故事目标
+至少 1 个 NPC
+至少 3 个 item
+至少 1 个 puzzle
+至少 1 个 boss 或最终挑战
+至少 2 个 ending 或评分结果
+孩子能向家长讲解项目规则和代码逻辑
+```
 
-1. L1 前 3 关复用当前顺序、方向、循环。
-2. L1-4 开始加入 Scratch 素材里的下落、收集、敌人、发射。
-3. L2 开始做完整游戏规则。
-4. L3 开始做项目挑战和作品展示。
+## 后续技术改造需求
 
-这样产品会从“解谜闯关”升级成“真正做项目的游戏化编程课”。
+为了支持第 11 关以后，当前引擎需要扩展这些能力：
+
+| 能力 | 目前状态 | 需要新增 |
+| --- | --- | --- |
+| 多角色 | 目前主要是单 robot | object/entity 系统 |
+| 动态对象 | 目前地图 tile 为主 | falling energy、bullet、enemy clone |
+| 时间系统 | 目前一次性执行程序 | tick/update 循环 |
+| 克隆 | 暂无 | spawn/delete entity |
+| 广播 | 暂无 | message/event bus |
+| UI 场景 | 目前 home/map/level | start/game over/project page |
+| 项目保存 | 有学习记录 | 保存作品配置和规则 |
+
+## 与英语学习的结合
+
+每关只新增 3-5 个词，但必须在 4 个位置重复出现：
+
+```text
+积木名：shoot
+对象名：bullet
+任务句：Shoot the enemy.
+复盘问句：When did you use shoot?
+```
+
+中文只做弱提示。英文必须是主要视觉层级。
+
+## 结论
+
+最新路线应该是：
+
+```text
+1-10 关：基础闯关，已经完成
+11-22 关：小游戏机制，下一步开发
+23-34 关：完整游戏规则
+35-46 关：项目化冒险和作品发布
+```
+
+最现实的下一步不是继续写更多文档，而是先实现第 11-14 关所需的动态对象系统：
+
+```text
+energy fall
+catch energy
+enemy patrol
+touching enemy
+```
