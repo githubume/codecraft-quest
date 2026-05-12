@@ -11,6 +11,22 @@
 - 英语词卡和过程英语提示。
 - 本地学习记录和家长中心。
 
+## 在线游玩
+
+GitHub Pages 发布后，线上地址是：
+
+```text
+https://githubume.github.io/codecraft-quest/
+```
+
+以后更新代码后，在本地运行下面命令即可重新发布：
+
+```bash
+npm run deploy:pages
+```
+
+这个命令会构建网页，并把结果推送到 `gh-pages` 分支。
+
 ## 本地安装运行
 
 需要先安装 Node.js。

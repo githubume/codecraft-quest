@@ -23,20 +23,20 @@ import type { BlockCommand, BlockType, GameState, Level, LearningRecord, Tile } 
 
 type Page = "home" | "map" | "level" | "parent";
 
-const blockLabels: Record<BlockType, string> = {
-  move: "move 移动",
-  turnLeft: "turn left 左转",
-  turnRight: "turn right 右转",
-  collect: "collect 收集",
-  repeat: "repeat 重复",
-  ifEnemyAhead: "if enemy ahead 如果前方有敌人",
-  ifWallAhead: "if wall ahead 如果前方有墙",
-  ifCoinHere: "if coin here 如果这里有金币",
-  turnAround: "turn around 掉头",
-  openDoor: "open door 开门",
-  wait: "wait 等待",
-  changeScore: "score +1 分数加一",
-  changeHealth: "health +1 生命加一",
+const blockLabels: Record<BlockType, { en: string; zh: string }> = {
+  move: { en: "move", zh: "移动" },
+  turnLeft: { en: "turn left", zh: "左转" },
+  turnRight: { en: "turn right", zh: "右转" },
+  collect: { en: "collect", zh: "收集" },
+  repeat: { en: "repeat", zh: "重复" },
+  ifEnemyAhead: { en: "if enemy ahead", zh: "如果前方有敌人" },
+  ifWallAhead: { en: "if wall ahead", zh: "如果前方有墙" },
+  ifCoinHere: { en: "if coin here", zh: "如果这里有金币" },
+  turnAround: { en: "turn around", zh: "掉头" },
+  openDoor: { en: "open door", zh: "开门" },
+  wait: { en: "wait", zh: "等待" },
+  changeScore: { en: "score +1", zh: "分数加一" },
+  changeHealth: { en: "health +1", zh: "生命加一" },
 };
 
 const tileLabels: Record<Tile, string> = {
@@ -358,7 +358,7 @@ function LevelPage({
             <div className="block-palette">
               {level.allowedBlocks.map((block) => (
                 <button className="block-button" key={block} onClick={() => onAddBlock(block)}>
-                  <Plus size={16} /> {blockLabels[block]}
+                  <Plus size={14} /> <BilingualLabel en={blockLabels[block].en} zh={blockLabels[block].zh} />
                 </button>
               ))}
             </div>
@@ -369,7 +369,9 @@ function LevelPage({
               {blocks.length === 0 && <p className="empty-workspace">从上方选择积木，拼出机器人动作。</p>}
               {blocks.map((block, index) => (
                 <div className="command-block" key={block.id}>
-                  <span>{index + 1}. {blockLabels[block.type]}</span>
+                  <span className="command-label">
+                    <b>{index + 1}.</b> <BilingualLabel en={blockLabels[block.type].en} zh={blockLabels[block.type].zh} />
+                  </span>
                   <div className="command-controls">
                     <button aria-label="上移积木" className="mini-button" disabled={index === 0} onClick={() => onMoveBlock(block.id, -1)}>
                       ↑
@@ -411,8 +413,7 @@ function LevelPage({
             <div className="word-list">
               {level.vocabulary.map((item) => (
                 <div className={`word-card ${isWordUsed(item.word, usedBlocks) ? "active" : ""}`} key={item.word}>
-                  <strong>{item.word}</strong>
-                  <span>{item.meaning}</span>
+                  <BilingualLabel en={item.word} zh={item.meaning} />
                   <small>{item.sentence}</small>
                 </div>
               ))}
@@ -445,7 +446,7 @@ function MissionPanel({ level }: { level: Level }) {
       <div className="mission-words">
         {level.vocabulary.map((item) => (
           <span key={item.word}>
-            {item.word} <small>{item.meaning}</small>
+            <BilingualLabel en={item.word} zh={item.meaning} />
           </span>
         ))}
       </div>
@@ -500,8 +501,8 @@ function GameBoard({ level, state }: { level: Level; state: GameState }) {
                 ""
               ) : (
                 <span className="tile-content">
-                  <strong>{tileLabels[tile]}</strong>
-                  {tileWords[tile] && <small>{tileWords[tile]}</small>}
+                  <strong>{tileWords[tile] ?? tileLabels[tile]}</strong>
+                  {tileWords[tile] && <small>{tileLabels[tile]}</small>}
                 </span>
               )}
             </div>
@@ -513,7 +514,16 @@ function GameBoard({ level, state }: { level: Level; state: GameState }) {
 }
 
 function isWordUsed(word: string, usedBlocks: Set<BlockType>) {
-  return [...usedBlocks].some((block) => actionWords[block].word === word || blockLabels[block].includes(word));
+  return [...usedBlocks].some((block) => actionWords[block].word === word || blockLabels[block].en.includes(word));
+}
+
+function BilingualLabel({ en, zh }: { en: string; zh: string }) {
+  return (
+    <span className="bilingual-label">
+      <span className="bilingual-en">{en}</span>
+      <span className="bilingual-zh">{zh}</span>
+    </span>
+  );
 }
 
 function translateTrace(item: string) {

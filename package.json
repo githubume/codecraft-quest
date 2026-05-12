@@ -8,6 +8,7 @@
     "dev": "vite --host 127.0.0.1",
     "dev:open": "vite --host 127.0.0.1 --open",
     "build": "tsc --noEmit && vite build",
+    "deploy:pages": "npm run build && bash scripts/deploy-pages.sh",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
