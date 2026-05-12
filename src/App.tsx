@@ -37,6 +37,11 @@ const blockLabels: Record<BlockType, { en: string; zh: string }> = {
   wait: { en: "wait", zh: "等待" },
   changeScore: { en: "score +1", zh: "分数加一" },
   changeHealth: { en: "health +1", zh: "生命加一" },
+  fallEnergy: { en: "fall energy", zh: "能量下落" },
+  catchEnergy: { en: "catch energy", zh: "接住能量" },
+  resetEnergy: { en: "reset energy", zh: "重置能量" },
+  patrolEnemy: { en: "patrol enemy", zh: "敌人巡逻" },
+  ifTouchingEnemy: { en: "if touching enemy", zh: "如果碰到敌人" },
 };
 
 const tileLabels: Record<Tile, string> = {
@@ -80,6 +85,11 @@ const actionWords: Record<BlockType, { word: string; meaning: string; prompt: st
   wait: { word: "wait", meaning: "等待", prompt: "wait 表示暂停一步，用来表达节奏和调试。" },
   changeScore: { word: "score", meaning: "分数", prompt: "change score 让分数发生变化。" },
   changeHealth: { word: "health", meaning: "生命值", prompt: "change health 用来恢复或改变生命状态。" },
+  fallEnergy: { word: "fall", meaning: "下落", prompt: "fall energy 让能量球向 bottom 移动一步。" },
+  catchEnergy: { word: "catch", meaning: "接住", prompt: "catch energy 只有在 robot touching energy 时才会加 score。" },
+  resetEnergy: { word: "reset", meaning: "重置", prompt: "reset energy 把到底部的能量球送回 top。" },
+  patrolEnemy: { word: "patrol", meaning: "巡逻", prompt: "patrol enemy 让敌人移动一步，遇到 edge 会 turn around。" },
+  ifTouchingEnemy: { word: "touching", meaning: "碰到", prompt: "if touching enemy 会检查碰撞，碰到就 damage health。" },
 };
 
 function App() {
@@ -256,8 +266,8 @@ function HomePage({ onStart, onParent, records }: { onStart: () => void; onParen
       <div className="home-layout">
         <div className="hero-panel">
           <p className="eyebrow">今日任务</p>
-          <h2>挑战 10 张编程任务地图</h2>
-          <p>拖动指令块，控制角色移动、转向、开门、避险、收集和调试。后半段关卡需要同时处理钥匙、生命值、金币分数和条件判断。</p>
+          <h2>挑战 14 张编程任务地图</h2>
+          <p>拖动指令块，控制角色移动、转向、开门、避险、收集和调试。第 11 关以后开始加入能量下落、接住得分、敌人巡逻和动态碰撞。</p>
           <div className="hero-actions">
             <button className="primary-button" onClick={onStart}>
               <Play size={18} /> 开始冒险
@@ -289,7 +299,7 @@ function MapPage({
 }) {
   return (
     <section className="page">
-      <Header title="冒险地图" subtitle="逐关解锁，后 5 关难度更高" onBack={onBack} />
+      <Header title="冒险地图" subtitle="逐关解锁，后续关卡从闯关进入小游戏机制" onBack={onBack} />
       <div className="map-grid">
         {levels.map((level) => {
           const locked = level.id > unlockedLevel;
@@ -429,6 +439,10 @@ function LevelPage({
         <span>Score {state.score}</span>
         <span>Key {state.keys}</span>
         <span>Health {state.health}</span>
+        <span>Catch {state.catches}</span>
+        <span>Miss {state.misses}</span>
+        <span>Reset {state.resets}</span>
+        <span>Patrol {state.patrols}</span>
         <button className="music-toggle" onClick={onToggleMusic}>
           {musicEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
           {musicEnabled ? "背景音乐开" : "背景音乐关"}
@@ -493,10 +507,18 @@ function GameBoard({ level, state }: { level: Level; state: GameState }) {
         row.map((tile, colIndex) => {
           const hasRobot = rowIndex === state.row && colIndex === state.col;
           const collected = state.collected.includes(`${rowIndex}:${colIndex}`);
+          const entities = state.entities.filter((entity) => entity.row === rowIndex && entity.col === colIndex);
           return (
             <div className={`tile tile-${tile} ${collected ? "collected" : ""}`} key={`${rowIndex}-${colIndex}`}>
               {hasRobot ? (
-                <Robot direction={state.direction} mood={state.success ? "happy" : state.failed ? "sad" : "ready"} />
+                <div className="tile-stack">
+                  <Robot direction={state.direction} mood={state.success ? "happy" : state.failed ? "sad" : "ready"} />
+                  {entities.map((entity) => <EntitySprite entity={entity} key={entity.id} />)}
+                </div>
+              ) : entities.length > 0 ? (
+                <div className="tile-stack">
+                  {entities.map((entity) => <EntitySprite entity={entity} key={entity.id} />)}
+                </div>
               ) : collected ? (
                 ""
               ) : (
@@ -535,12 +557,37 @@ function translateTrace(item: string) {
   if (item === "health +1") return "health +1 生命加一";
   if (item === "wait") return "wait 等待";
   if (item === "open door") return "open door 开门";
+  if (item === "fall energy") return "fall energy 能量下落";
+  if (item === "reset energy") return "reset energy 重置能量";
+  if (item === "catch energy score +1") return "catch energy 得分";
+  if (item === "catch energy -> no touch") return "catch energy 没碰到";
+  if (item === "energy bottom miss +1") return "bottom miss 漏接";
+  if (item === "patrol enemy") return "patrol enemy 巡逻";
+  if (item === "enemy edge turn around") return "edge turn around 边缘掉头";
+  if (item.includes("touching enemy")) return item.replace("touching enemy", "touching enemy 碰到敌人");
   if (item.includes("wall ahead")) return item.replace("if wall ahead", "if wall ahead 如果前方有墙");
   if (item.includes("coin here")) return item.replace("if coin here", "if coin here 如果这里有金币");
   if (item.includes("trap")) return "trap health -1 陷阱扣生命";
   if (item.startsWith("collect")) return item.replace("collect", "collect 收集");
   if (item.startsWith("if enemy")) return item.replace("if enemy ahead", "if enemy ahead 如果前方有敌人");
   return item;
+}
+
+function EntitySprite({ entity }: { entity: GameState["entities"][number] }) {
+  if (entity.type === "energy") {
+    return (
+      <div className="entity energy-entity" aria-label="energy">
+        <strong>energy</strong>
+        <small>能量</small>
+      </div>
+    );
+  }
+  return (
+    <div className={`entity enemy-entity enemy-${entity.direction ?? "right"}`} aria-label="patrol enemy">
+      <strong>enemy</strong>
+      <small>巡逻</small>
+    </div>
+  );
 }
 
 function Robot({ direction, mood }: { direction: GameState["direction"]; mood: "ready" | "happy" | "sad" }) {

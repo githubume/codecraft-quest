@@ -1,4 +1,4 @@
-import type { BlockCommand, Direction, GameState, Level, Tile } from "../types";
+import type { BlockCommand, Direction, DynamicEntity, GameState, Level, Tile } from "../types";
 
 const deltas: Record<Direction, { row: number; col: number }> = {
   up: { row: -1, col: 0 },
@@ -29,8 +29,14 @@ export function initialState(level: Level): GameState {
     score: 0,
     keys: 0,
     health: 3,
+    catches: 0,
+    misses: 0,
+    resets: 0,
+    patrols: 0,
+    ticks: 0,
     collected: [],
     opened: [],
+    entities: (level.entities ?? []).map((entity) => ({ ...entity })),
     failed: false,
     success: false,
     message: "准备运行。",
@@ -64,9 +70,16 @@ function expandBlocks(blocks: BlockCommand[]): BlockCommand[] {
   for (const block of blocks) {
     if (block.type === "repeat") {
       const count = block.count ?? 2;
-      for (let i = 0; i < count; i += 1) {
-        expanded.push({ id: `${block.id}-${i}-move`, type: "move" });
-        expanded.push({ id: `${block.id}-${i}-collect`, type: "collect" });
+      const previous = expanded.at(-1);
+      if (previous && previous.type !== "repeat") {
+        for (let i = 0; i < count; i += 1) {
+          expanded.push({ id: `${block.id}-${i}-${previous.type}`, type: previous.type });
+        }
+      } else {
+        for (let i = 0; i < count; i += 1) {
+          expanded.push({ id: `${block.id}-${i}-move`, type: "move" });
+          expanded.push({ id: `${block.id}-${i}-collect`, type: "collect" });
+        }
       }
     } else {
       expanded.push(block);
@@ -102,6 +115,21 @@ function executeBlock(level: Level, state: GameState, block: BlockCommand) {
     case "changeHealth":
       state.health += 1;
       state.trace.push("health +1");
+      break;
+    case "fallEnergy":
+      fallEnergy(level, state);
+      break;
+    case "catchEnergy":
+      catchEnergy(state);
+      break;
+    case "resetEnergy":
+      resetBottomEnergy(level, state);
+      break;
+    case "patrolEnemy":
+      patrolEnemies(level, state);
+      break;
+    case "ifTouchingEnemy":
+      checkTouchingEnemy(level, state);
       break;
     case "openDoor":
       openDoor(level, state);
@@ -164,6 +192,15 @@ function move(level: Level, state: GameState) {
   }
   state.row = next.row;
   state.col = next.col;
+  if (touchingEntity(state, "patrolEnemy")) {
+    state.health -= 1;
+    state.trace.push("touching enemy health -1");
+    if (state.health <= 0) {
+      state.failed = true;
+      state.message = level.hints.damage ?? level.hints.enemy ?? "机器人碰到 enemy，health 变成 0。";
+      return;
+    }
+  }
   if (tile === "X") {
     state.health -= 1;
     state.trace.push("trap health -1");
@@ -174,6 +211,92 @@ function move(level: Level, state: GameState) {
     }
   }
   state.trace.push("move");
+}
+
+function fallEnergy(level: Level, state: GameState) {
+  const bottom = level.grid.length - 1;
+  for (const entity of state.entities) {
+    if (entity.type !== "energy") continue;
+    if (entity.row >= bottom) {
+      state.misses += 1;
+      state.trace.push("energy bottom miss +1");
+      if (level.win.maxMisses !== undefined && state.misses > level.win.maxMisses) {
+        state.failed = true;
+        state.message = level.hints.miss ?? "miss 太多了，重新规划 catch 的时机。";
+        return;
+      }
+      continue;
+    }
+    entity.row += 1;
+    state.ticks += 1;
+    state.trace.push("fall energy");
+  }
+}
+
+function catchEnergy(state: GameState) {
+  const energy = state.entities.find((entity) => entity.type === "energy" && entity.row === state.row && entity.col === state.col);
+  if (!energy) {
+    state.trace.push("catch energy -> no touch");
+    return;
+  }
+  state.catches += 1;
+  state.score += 1;
+  energy.row = energy.homeRow ?? 0;
+  energy.col = energy.homeCol ?? energy.col;
+  state.trace.push("catch energy score +1");
+}
+
+function resetBottomEnergy(level: Level, state: GameState) {
+  const bottom = level.grid.length - 1;
+  const energy = state.entities.find((entity) => entity.type === "energy" && entity.row >= bottom);
+  if (!energy) {
+    state.trace.push("reset energy -> not bottom");
+    return;
+  }
+  energy.row = energy.homeRow ?? 0;
+  energy.col = energy.homeCol ?? energy.col;
+  state.resets += 1;
+  state.trace.push("reset energy");
+}
+
+function patrolEnemies(level: Level, state: GameState) {
+  for (const entity of state.entities) {
+    if (entity.type !== "patrolEnemy") continue;
+    const direction = entity.direction ?? "right";
+    const delta = deltas[direction];
+    const next = { row: entity.row + delta.row, col: entity.col + delta.col };
+    if (isEntityBlocked(level, state, entity, next.row, next.col)) {
+      entity.direction = rightTurn[rightTurn[direction]];
+      state.trace.push("enemy edge turn around");
+    } else {
+      entity.row = next.row;
+      entity.col = next.col;
+      state.trace.push("patrol enemy");
+    }
+    state.patrols += 1;
+    state.ticks += 1;
+  }
+  if (touchingEntity(state, "patrolEnemy")) {
+    state.health -= 1;
+    state.trace.push("enemy patrol touch health -1");
+    if (state.health <= 0) {
+      state.failed = true;
+      state.message = level.hints.damage ?? level.hints.enemy ?? "enemy 碰到机器人，health 变成 0。";
+    }
+  }
+}
+
+function checkTouchingEnemy(level: Level, state: GameState) {
+  if (!touchingEntity(state, "patrolEnemy")) {
+    state.trace.push("if touching enemy -> safe");
+    return;
+  }
+  state.health -= 1;
+  state.trace.push("if touching enemy -> damage health -1");
+  if (state.health <= 0) {
+    state.failed = true;
+    state.message = level.hints.damage ?? "health 变成 0，挑战失败。";
+  }
 }
 
 function collect(level: Level, state: GameState) {
@@ -226,6 +349,16 @@ function isBlocked(level: Level, state: GameState) {
   return !tile || tile === "W" || (tile === "D" && !state.opened.includes(`${next.row}:${next.col}`));
 }
 
+function isEntityBlocked(level: Level, state: GameState, entity: DynamicEntity, row: number, col: number) {
+  const tile = tileAt(level, row, col);
+  if (!tile || tile === "W" || tile === "D") return true;
+  return state.entities.some((other) => other.id !== entity.id && other.row === row && other.col === col);
+}
+
+function touchingEntity(state: GameState, type: DynamicEntity["type"]) {
+  return state.entities.some((entity) => entity.type === type && entity.row === state.row && entity.col === state.col);
+}
+
 function checkWin(level: Level, state: GameState) {
   const targetReached = level.win.target
     ? state.row === level.win.target.row && state.col === level.win.target.col
@@ -233,8 +366,24 @@ function checkWin(level: Level, state: GameState) {
   const scoreReached = level.win.requiredScore ? state.score >= level.win.requiredScore : true;
   const keysReached = level.win.requiredKeys ? state.keys >= level.win.requiredKeys : true;
   const healthReached = level.win.minHealth ? state.health >= level.win.minHealth : true;
+  const catchesReached = level.win.requiredCatches ? state.catches >= level.win.requiredCatches : true;
+  const resetsReached = level.win.requiredResets ? state.resets >= level.win.requiredResets : true;
+  const patrolsReached = level.win.requiredPatrols ? state.patrols >= level.win.requiredPatrols : true;
+  const missesAllowed = level.win.maxMisses !== undefined ? state.misses <= level.win.maxMisses : true;
+  const survivedTicks = level.win.surviveTicks ? state.ticks >= level.win.surviveTicks : true;
   const allCollected = level.win.collectAll ? collectableCount(level, level.win.collectAll) === state.collected.length : true;
-  return targetReached && scoreReached && keysReached && healthReached && allCollected;
+  return (
+    targetReached &&
+    scoreReached &&
+    keysReached &&
+    healthReached &&
+    catchesReached &&
+    resetsReached &&
+    patrolsReached &&
+    missesAllowed &&
+    survivedTicks &&
+    allCollected
+  );
 }
 
 function collectableCount(level: Level, tile: Tile) {

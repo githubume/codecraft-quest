@@ -15,7 +15,12 @@ export type BlockType =
   | "openDoor"
   | "wait"
   | "changeScore"
-  | "changeHealth";
+  | "changeHealth"
+  | "fallEnergy"
+  | "catchEnergy"
+  | "resetEnergy"
+  | "patrolEnemy"
+  | "ifTouchingEnemy";
 
 export type BlockCommand = {
   id: string;
@@ -27,6 +32,16 @@ export type VocabularyWord = {
   word: string;
   meaning: string;
   sentence: string;
+};
+
+export type DynamicEntity = {
+  id: string;
+  type: "energy" | "patrolEnemy";
+  row: number;
+  col: number;
+  direction?: Direction;
+  homeRow?: number;
+  homeCol?: number;
 };
 
 export type Level = {
@@ -44,6 +59,7 @@ export type Level = {
   };
   allowedBlocks: BlockType[];
   vocabulary: VocabularyWord[];
+  entities?: DynamicEntity[];
   win: {
     target?: { row: number; col: number };
     requiredScore?: number;
@@ -51,6 +67,11 @@ export type Level = {
     collectAll?: Tile;
     avoidEnemies?: boolean;
     minHealth?: number;
+    requiredCatches?: number;
+    requiredResets?: number;
+    requiredPatrols?: number;
+    maxMisses?: number;
+    surviveTicks?: number;
   };
   hints: Record<string, string>;
   reflectionQuestions: string[];
@@ -63,8 +84,14 @@ export type GameState = {
   score: number;
   keys: number;
   health: number;
+  catches: number;
+  misses: number;
+  resets: number;
+  patrols: number;
+  ticks: number;
   collected: string[];
   opened: string[];
+  entities: DynamicEntity[];
   failed: boolean;
   success: boolean;
   message: string;
